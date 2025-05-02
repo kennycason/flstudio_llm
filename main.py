@@ -13,6 +13,7 @@ import re
 import struct
 import zlib
 from tempfile import NamedTemporaryFile
+import shutil
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -393,6 +394,85 @@ async def generate_3xosc(request: TextRequest):
                 tmpfile.name,
                 media_type="application/json",
                 filename="generated_3xosc_preset.json"
+            )
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse AI response as JSON: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response from AI: {str(e)}")
+
+# Map waveform names to values (update as needed)
+OSC_WAVEFORM_MAP = {
+    "sine": 0,
+    "triangle": 1,
+    "saw": 2,
+    "square": 3,
+    "noise": 4,
+    # Add more if needed
+}
+
+OSC_OFFSETS = {
+    'osc1_waveform': 159,
+    'osc1_coarse': 163,
+    'osc1_fine': 167,
+    'osc2_waveform': 187,
+    'osc2_coarse': 191,
+    'osc2_fine': 195,
+    'osc3_waveform': 215,
+    'osc3_coarse': 219,
+    'osc3_fine': 223,
+    # Add more as discovered
+}
+
+TEMPLATE_FST = '3xosc-default.fst'
+
+def create_3xosc_fst(params, output_path, template_path=TEMPLATE_FST):
+    with open(template_path, 'rb') as f:
+        data = bytearray(f.read())
+    # Set parameters at known offsets
+    for key, offset in OSC_OFFSETS.items():
+        value = params.get(key)
+        if value is not None:
+            # Map waveform names to values
+            if 'waveform' in key and isinstance(value, str):
+                value = OSC_WAVEFORM_MAP.get(value.lower(), 0)
+            # Clamp to 0-255
+            value = max(0, min(255, int(value)))
+            data[offset] = value
+    with open(output_path, 'wb') as f:
+        f.write(data)
+
+@app.post("/generate/3xosc-fst")
+async def generate_3xosc_fst(request: TextRequest):
+    prompt = (
+        "Generate a 3x Osc preset for FL Studio as JSON. "
+        "Only output valid JSON. Do not include comments or explanations. "
+        "Format: {\n"
+        "  \"osc1_waveform\": \"sine|triangle|saw|square|noise\",\n"
+        "  \"osc1_coarse\": 0,\n"
+        "  \"osc1_fine\": 0,\n"
+        "  \"osc2_waveform\": \"sine|triangle|saw|square|noise\",\n"
+        "  \"osc2_coarse\": 0,\n"
+        "  \"osc2_fine\": 0,\n"
+        "  \"osc3_waveform\": \"sine|triangle|saw|square|noise\",\n"
+        "  \"osc3_coarse\": 0,\n"
+        "  \"osc3_fine\": 0\n"
+        "}"
+    ) + f"\nPreset description: {request.text}"
+    logger.debug(f"Generated 3xOsc FST prompt: {prompt}")
+    ai_response = await call_lm_studio(prompt)
+    logger.debug(f"AI response: {ai_response}")
+    try:
+        cleaned_response = clean_json_response(ai_response)
+        cleaned_response = strip_json_comments(cleaned_response)
+        logger.debug(f"Cleaned response (no comments): {cleaned_response}")
+        osc_data = json.loads(cleaned_response)
+        logger.debug(f"Parsed 3xOsc data: {osc_data}")
+        with NamedTemporaryFile(delete=False, suffix='.fst') as tmpfile:
+            create_3xosc_fst(osc_data, tmpfile.name)
+            tmpfile.flush()
+            return FileResponse(
+                tmpfile.name,
+                media_type="application/octet-stream",
+                filename="generated_3xosc_preset.fst"
             )
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse AI response as JSON: {str(e)}")
