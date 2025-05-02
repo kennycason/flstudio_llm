@@ -351,5 +351,52 @@ async def generate_fxp(request: TextRequest):
         logger.error(f"Failed to parse AI response as JSON: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Invalid JSON response from AI: {str(e)}")
 
+def generate_3xosc_prompt(text: str) -> str:
+    return f"""Generate a 3x Osc preset for FL Studio in JSON format based on: {text}
+Only output valid JSON. Do not include comments or explanations.
+Format:
+{{
+  "osc1_waveform": "sine|triangle|saw|square|noise",
+  "osc1_coarse": 0,
+  "osc1_fine": 0,
+  "osc2_waveform": "sine|triangle|saw|square|noise",
+  "osc2_coarse": 0,
+  "osc2_fine": 0,
+  "osc3_waveform": "sine|triangle|saw|square|noise",
+  "osc3_coarse": 0,
+  "osc3_fine": 0,
+  "mix_osc1": 0.33,
+  "mix_osc2": 0.33,
+  "mix_osc3": 0.33,
+  "global_detune": 0.0,
+  "global_phase": 0.0,
+  "global_volume": 1.0
+}}
+"""
+
+@app.post("/generate/3xosc")
+async def generate_3xosc(request: TextRequest):
+    prompt = generate_3xosc_prompt(request.text)
+    logger.debug(f"Generated 3xOsc prompt: {prompt}")
+    ai_response = await call_lm_studio(prompt)
+    logger.debug(f"AI response: {ai_response}")
+    try:
+        cleaned_response = clean_json_response(ai_response)
+        cleaned_response = strip_json_comments(cleaned_response)
+        logger.debug(f"Cleaned response (no comments): {cleaned_response}")
+        osc_data = json.loads(cleaned_response)
+        logger.debug(f"Parsed 3xOsc data: {osc_data}")
+        with NamedTemporaryFile(delete=False, suffix='.json') as tmpfile:
+            tmpfile.write(json.dumps(osc_data, indent=2).encode())
+            tmpfile.flush()
+            return FileResponse(
+                tmpfile.name,
+                media_type="application/json",
+                filename="generated_3xosc_preset.json"
+            )
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse AI response as JSON: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response from AI: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000) 
