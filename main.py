@@ -326,5 +326,30 @@ async def generate_content(request: TextRequest):
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/generate/fxp")
+async def generate_fxp(request: TextRequest):
+    prompt = generate_serum_prompt(request.text)
+    logger.debug(f"Generated Serum prompt: {prompt}")
+    ai_response = await call_lm_studio(prompt)
+    logger.debug(f"AI response: {ai_response}")
+    try:
+        cleaned_response = clean_json_response(ai_response)
+        logger.debug(f"Cleaned response: {cleaned_response}")
+        serum_data = json.loads(cleaned_response)
+        logger.debug(f"Parsed Serum data: {serum_data}")
+        with NamedTemporaryFile(delete=False, suffix='.fxp') as tmpfile:
+            if create_fxp_file(serum_data, tmpfile.name):
+                tmpfile.flush()
+                return FileResponse(
+                    tmpfile.name,
+                    media_type="application/octet-stream",
+                    filename="generated_serum_preset.fxp"
+                )
+            else:
+                raise HTTPException(status_code=500, detail="Failed to create FXP file")
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse AI response as JSON: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Invalid JSON response from AI: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000) 
