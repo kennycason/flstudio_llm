@@ -1,0 +1,32 @@
+{
+  "preset_name": "Hard Bass Dirt",
+  "oscillator1": {
+    "waveform": "sawtooth",
+    "octave": -1,
+    "detune": 0.02,
+    "unison": 5,
+    "phase": 0.0,
+    "volume": 1.0,
+    "pan": -0.3
+  },
+  "oscillator2": {
+    "waveform": "square",
+    "octave": -1,
+    "detune": -0.02,
+    "unison": 5,
+    "phase": 180.0,
+    "volume": 0.7,
+    "pan": 0.3
+  },
+  "filter": {
+    "type": "lowpass",
+    "cutoff": 250,
+    "resonance": 0.6
+  },
+  "envelope": {
+    "attack": 0.01,
+    "decay": 0.15,
+    "sustain": 0.8,
+    "release": 0.05
+  }
+}
