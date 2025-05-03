@@ -47,13 +47,12 @@ def strip_json_comments(s: str) -> str:
     return re.sub(r'//.*', '', s)
 
 def generate_midi_prompt(text: str) -> str:
-    return f"""Generate a MIDI pattern in JSON format based on: {text}
+    return f"""Generate a {text} as a 16-bar MIDI pattern in JSON format.
 Only output valid JSON. Do not include comments or explanations.
-If the pattern is long, only include the first 8 bars.
-
+Include as many notes as possible for a full 16-bar sequence.
 Format:
 {{
-    "tempo": 120,
+    "tempo": 128,
     "time_signature": [4, 4],
     "notes": [
         {{"pitch": 60, "velocity": 100, "duration": 1.0, "start": 0.0}}
@@ -225,13 +224,12 @@ async def call_lm_studio(prompt: str) -> str:
             json={
                 "model": "gemma-3-27b-it-qat",
                 "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.1,
-                "max_tokens": 2048
+                "temperature": 0.3,
+                "max_tokens": 3072
             }
         )
         logger.debug(f"LM Studio response status: {response.status_code}")
         logger.debug(f"LM Studio response: {response.text}")
-        
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
     except requests.exceptions.ConnectionError as e:
