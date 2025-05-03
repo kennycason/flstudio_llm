@@ -413,12 +413,24 @@ OSC_OFFSETS = {
     'osc1_waveform': 159,
     'osc1_coarse': 163,
     'osc1_fine': 167,
+    'osc1_volume': 171,
+    'osc1_phase': 175,
+    'osc1_detune': 179,
     'osc2_waveform': 187,
     'osc2_coarse': 191,
     'osc2_fine': 195,
+    'osc2_volume': 199,
+    'osc2_phase': 203,
+    'osc2_detune': 207,
     'osc3_waveform': 215,
     'osc3_coarse': 219,
     'osc3_fine': 223,
+    'osc3_volume': 227,
+    'osc3_phase': 231,
+    'osc3_detune': 235,
+    'mix_osc1': 239,
+    'mix_osc2': 243,
+    'mix_osc3': 247,
     # Add more as discovered
 }
 
@@ -437,8 +449,10 @@ def create_3xosc_fst(params, output_path, template_path=TEMPLATE_FST):
             # Clamp to 0-255
             value = max(0, min(255, int(value)))
             data[offset] = value
+            logger.debug(f"Set {key} (offset {offset}) to {value}")
     with open(output_path, 'wb') as f:
         f.write(data)
+    logger.info(f"Wrote 3xOsc FST file: {output_path}")
 
 @app.post("/generate/3xosc-fst")
 async def generate_3xosc_fst(request: TextRequest):
@@ -449,12 +463,24 @@ async def generate_3xosc_fst(request: TextRequest):
         "  \"osc1_waveform\": \"sine|triangle|saw|square|noise\",\n"
         "  \"osc1_coarse\": 0,\n"
         "  \"osc1_fine\": 0,\n"
+        "  \"osc1_volume\": 127,\n"
+        "  \"osc1_phase\": 0,\n"
+        "  \"osc1_detune\": 0,\n"
         "  \"osc2_waveform\": \"sine|triangle|saw|square|noise\",\n"
         "  \"osc2_coarse\": 0,\n"
         "  \"osc2_fine\": 0,\n"
+        "  \"osc2_volume\": 127,\n"
+        "  \"osc2_phase\": 0,\n"
+        "  \"osc2_detune\": 0,\n"
         "  \"osc3_waveform\": \"sine|triangle|saw|square|noise\",\n"
         "  \"osc3_coarse\": 0,\n"
-        "  \"osc3_fine\": 0\n"
+        "  \"osc3_fine\": 0,\n"
+        "  \"osc3_volume\": 127,\n"
+        "  \"osc3_phase\": 0,\n"
+        "  \"osc3_detune\": 0,\n"
+        "  \"mix_osc1\": 85,\n"
+        "  \"mix_osc2\": 85,\n"
+        "  \"mix_osc3\": 85\n"
         "}"
     ) + f"\nPreset description: {request.text}"
     logger.debug(f"Generated 3xOsc FST prompt: {prompt}")
@@ -465,10 +491,11 @@ async def generate_3xosc_fst(request: TextRequest):
         cleaned_response = strip_json_comments(cleaned_response)
         logger.debug(f"Cleaned response (no comments): {cleaned_response}")
         osc_data = json.loads(cleaned_response)
-        logger.debug(f"Parsed 3xOsc data: {osc_data}")
+        logger.info(f"AI 3xOsc JSON: {osc_data}")
         with NamedTemporaryFile(delete=False, suffix='.fst') as tmpfile:
             create_3xosc_fst(osc_data, tmpfile.name)
             tmpfile.flush()
+            logger.info(f"Generated 3xOsc FST file at {tmpfile.name}")
             return FileResponse(
                 tmpfile.name,
                 media_type="application/octet-stream",
