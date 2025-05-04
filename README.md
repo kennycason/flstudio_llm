@@ -1,6 +1,6 @@
 # FL Studio LLM Assisted Music Generation
 
-A simple application that generates MIDI patterns and Serum presets based on text input using AI.
+A simple application that generates MIDI patterns and Serum presets (3xOsc) based on text input using AI.
 
 <img src="flstudio_llm.png" width="50%" />
 
