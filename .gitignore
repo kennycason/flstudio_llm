@@ -1,0 +1,113 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+llama_env/
+venv/
+ENV/
+
+# Model files and data
+faq_model/
+results/
+processed_data.jsonl
+*.safetensors
+*.bin
+*.pt
+*.pth
+model_bf16/
+model_demo/
+deepseek_model/
+llama_model/
+*.gguf
+*.model
+*.dylib
+*.so
+*.a
+.cache/
+*.pyc
+
+# Large data files
+*.npz
+
+
+# Hugging Face cache
+.cache/huggingface/
+
+# PyArrow
+*.arrow
+
+# Torch specific
+torch-*.dist-info/
+
+# Terraform provider
+**/ .terraform/*
+**/ .terraform/providers/**
+terraform-provider-*
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs and databases
+*.log
+*.sqlite
+wandb/
+
+# Environment variables
+.env
+.env.local
+
+# Hugging Face specific
+.huggingface/
+cache/
+hub/
+
+# Training artifacts
+checkpoints/
+runs/
+outputs/
+
+# SSH Keys
+*.pem
+*.key
+
+# Data
+data/processed_*.jsonl 
+
+deepseek/janus-pro-7b/offload_dir/*

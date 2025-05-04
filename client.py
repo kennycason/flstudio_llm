@@ -2,10 +2,10 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import requests
 
-class FLStudioMCPClient:
+class FLStudioLLMClient:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("FL Studio AI MCP")
+        self.root.title("FL Studio LLM")
         self.root.geometry("500x340")
         
         main_frame = ttk.Frame(self.root, padding="10")
@@ -16,9 +16,13 @@ class FLStudioMCPClient:
         self.text_input.grid(row=1, column=0, pady=5)
         
         ttk.Label(main_frame, text="Output type:").grid(row=2, column=0, sticky=tk.W)
-        self.output_type = ttk.Combobox(main_frame, values=["MIDI", "Serum FXP"])
+        self.output_type = ttk.Combobox(main_frame, values=[
+            "MIDI File (.mid)",
+            "Serum Preset (.fxp)",
+            "3xOsc Preset (.fst)"
+        ])
         self.output_type.grid(row=3, column=0, pady=5)
-        self.output_type.set("MIDI")
+        self.output_type.set("MIDI File (.mid)")
         
         ttk.Button(main_frame, text="Generate", command=self.generate).grid(row=4, column=0, pady=10)
         
@@ -33,16 +37,24 @@ class FLStudioMCPClient:
             return
         self.status_label.config(text=f"Generating {output_type}...")
         try:
-            if output_type == "MIDI":
+            if output_type == "MIDI File (.mid)":
                 endpoint = "http://localhost:8000/generate/midi"
                 filetypes = [("MIDI files", "*.mid")]
                 default_ext = ".mid"
                 default_name = "generated_ai_midi.mid"
-            else:
+            elif output_type == "Serum Preset (.fxp)":
                 endpoint = "http://localhost:8000/generate/fxp"
                 filetypes = [("Serum Preset files", "*.fxp")]
                 default_ext = ".fxp"
                 default_name = "generated_serum_preset.fxp"
+            elif output_type == "3xOsc Preset (.fst)":
+                endpoint = "http://localhost:8000/generate/3xosc-fst"
+                filetypes = [("3xOsc Preset files", "*.fst")]
+                default_ext = ".fst"
+                default_name = "generated_3xosc_preset.fst"
+            else:
+                self.status_label.config(text="Unknown output type selected.")
+                return
             response = requests.post(endpoint, json={"text": text})
             if response.status_code == 200:
                 file_path = filedialog.asksaveasfilename(
@@ -68,5 +80,5 @@ class FLStudioMCPClient:
         self.root.mainloop()
 
 if __name__ == "__main__":
-    client = FLStudioMCPClient()
+    client = FLStudioLLMClient()
     client.run() 

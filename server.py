@@ -432,7 +432,7 @@ OSC_OFFSETS = {
     # Add more as discovered
 }
 
-TEMPLATE_FST = '3xosc-default.fst'
+TEMPLATE_FST = 'presets/3xosc/3xosc_preset_default.fst'
 
 def create_3xosc_fst(params, output_path, template_path=TEMPLATE_FST):
     with open(template_path, 'rb') as f:
